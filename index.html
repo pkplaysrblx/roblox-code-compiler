@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monaco Editor with Lua</title>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #ffffff; /* Default light theme color */
+            transition: background-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        #editor-container {
+            height: calc(100% - 60px); /* Adjust height to leave space for the buttons */
+            width: 100%;
+            opacity: 1;
+            transition: opacity 0.6s;
+        }
+        .button-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        #theme-toggle {
+            background: none; /* Remove background */
+            border: none; /* Remove border */
+            cursor: pointer;
+            outline: none;
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 50%;
+            transition: color 0.3s, transform 0.6s, background-color 0.6s, width 0.6s, height 0.6s;
+            color: #202124; /* Default light theme color */
+            width: 50px; /* Default size */
+            height: 50px; /* Default size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: none; /* Ensure no shadow */
+        }
+        #theme-toggle.light {
+            color: #202124; /* Light theme color */
+        }
+        #theme-toggle.dark {
+            color: #FFD700; /* Dark theme color */
+        }
+        /* Morph animation */
+        @keyframes morph {
+            0% {
+                transform: scale(1);
+                border-radius: 50%;
+            }
+            50% {
+                transform: scale(1.2);
+                border-radius: 10%;
+            }
+            100% {
+                transform: scale(1);
+                border-radius: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="editor-container"></div>
+    
+    <div class="button-container">
+        <button id="theme-toggle" class="light">☀️</button>
+    </div>
+
+    <!-- Load Monaco Editor from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
+    <!-- Load Fengari Lua VM -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fengari/0.9.5/fengari-web.min.js"></script>
+    <script>
+        // Configure Monaco Editor paths
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs' } });
+
+        let editor;
+        let isDarkTheme = false;
+
+        // Custom dark theme to match background color
+        const customDarkTheme = {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#202124',  // Match body background color
+            }
+        };
+
+        // Register the custom dark theme
+        require(['vs/editor/editor.main'], function() {
+            monaco.editor.defineTheme('custom-dark', customDarkTheme);
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '-- Write your Lua code here...',
+                language: 'lua',
+                theme: 'vs-light',
+                dragAndDrop: true,
+                links: false,
+                minimap: {
+                    enabled: false,
+                },
+                showFoldingControls: 'always',
+                smoothScrolling: true,
+            });
+        });
+
+        // Toggle Theme Functionality
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const editorContainer = document.getElementById('editor-container');
+
+        themeToggleButton.addEventListener('click', function() {
+            // Add morph animation
+            themeToggleButton.style.animation = 'morph 0.6s';
+
+            // Fade out editor
+            editorContainer.style.opacity = '0';
+
+            setTimeout(() => {
+                // Toggle theme
+                isDarkTheme = !isDarkTheme;
+                if (isDarkTheme) {
+                    monaco.editor.setTheme('custom-dark');
+                    document.body.style.backgroundColor = '#202124'; // Dark theme background
+                    themeToggleButton.classList.remove('light');
+                    themeToggleButton.classList.add('dark');
+                    themeToggleButton.innerHTML = '🌙';
+                } else {
+                    monaco.editor.setTheme('vs-light');
+                    document.body.style.backgroundColor = '#ffffff'; // Light theme background
+                    themeToggleButton.classList.remove('dark');
+                    themeToggleButton.classList.add('light');
+                    themeToggleButton.innerHTML = '☀️';
+                }
+
+                // Fade in editor
+                editorContainer.style.opacity = '1';
+
+                // Remove morph animation
+                themeToggleButton.style.animation = '';
+            }, 600); // Timeout matches the duration of the fade animation
+        });
+    </script>
+</body>
+</html>
